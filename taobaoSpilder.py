@@ -10,12 +10,15 @@ from urllib.parse import quote
 import time
 import random
 
+# 搜索关键字
 keyword = 'ipad'
 options = webdriver.ChromeOptions()
+# 设置成开发者模式
 options.add_experimental_option('excludeSwitches', ['enable-automation'])
+# 账户密码
 USERNAME = ''
 PASSWORD = ''
-
+# 禁用图片跟css样式
 prefs = {"profile.managed_default_content_settings.images": 2,
          'permissions.default.stylesheet': 2}
 options.add_experimental_option("prefs", prefs)
@@ -23,9 +26,11 @@ browser = webdriver.Chrome(options=options)
 
 
 def login():
+    '''通过账号模拟登陆'''
     url = 'https://s.taobao.com/search?q=' + quote(keyword)
     browser.get(url)
     time.sleep(random.uniform(1, 3))
+    # 显示等待，并设置10S超时
     wait = WebDriverWait(browser, 10)
     wait.until(EC.presence_of_element_located(
         (By.XPATH, '//input[@name="fm-login-id"]')))
@@ -41,6 +46,7 @@ def login():
         "//button[contains(@class,'password-login')]").click()
 
     dragger = browser.find_element_by_id('nc_1_n1z')
+    # 设置行为，模拟滑动窗口，将滑块滑至最右端，并捕获异常后：跳出循环
     action = ActionChains(browser)
     for _ in range(500):
         try:
@@ -62,6 +68,7 @@ def index_page(page):
         browser.get(url)
         time.sleep(random.uniform(1, 3))
         wait = WebDriverWait(browser, 10)
+        # 当页面大于1时，进行页面跳转，跳转至page页
         if page > 1:
             input = wait.until(EC.presence_of_element_located(
                 (By.CSS_SELECTOR, '#mainsrp-pager div.form> input')))
@@ -70,10 +77,12 @@ def index_page(page):
             input.clear()
             input.send_keys(page)
             submit.click()
+        # 加载到第N页时，页码显示激活状态，则成功跳转
         wait.until(EC.text_to_be_present_in_element(
             (By.CSS_SELECTOR, '#mainsrp-pager li.item.active> span'), str(page)))
         wait.until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, '.m-itemlist .items .item')))
+        # 获取商品信息
         getproducts()
     except TimeoutException:
         print('TimeOut')
@@ -122,7 +131,7 @@ MAX_PAGE = 100
 
 def main():
     '''遍历每一页'''
-    for i in range(MAX_PAGE):
+    for i in range(1, MAX_PAGE):
         index_page(i)
 
 
